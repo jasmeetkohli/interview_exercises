@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  verify-pom:
+    container_name: verify_pom_container
+    build: .
+    working_dir: /workspace
+    command: python run_demo.py /workspace/git_repo
+    volumes:
+      - .:/workspace/
+      - $GIT_REPO_DIR:/workspace/git_repo
