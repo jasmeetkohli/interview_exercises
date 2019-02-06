@@ -1,4 +1,4 @@
-## Python script to modify <version> of pom.xml
+## Python script to modify \<version> of pom.xml
 
 #### Steps
 1. export GIT_REPO_DIR=\<path-to-mvnproject-git-repo>
