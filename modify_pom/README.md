@@ -25,3 +25,5 @@ feel is appropriate for the reviewer to be aware of.
 #### Assumptions
 1. pom.xml resides in $GIT_REPO_DIR and not in any sub-dirs
 2. user has docker and docker-compose configured
+3. user has a mvn project with git initialized.
+(or you may clone this project for tests: https://github.com/jitpack/maven-simple and point GIT_REPO_DIR variable to it)
