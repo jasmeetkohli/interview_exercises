@@ -20,7 +20,6 @@ feel is appropriate for the reviewer to be aware of.
 from lxml import etree
 from io import BytesIO
 from pygit2 import Repository
-import os.path
 from os import path
 import logging
 import sys 
@@ -38,16 +37,7 @@ def get_snapshot_path(root, current_version, git_repo):
 	snapshot_path = git_repo + "/target/" + app_name + "-" + current_version + ".jar"
 	return snapshot_path
 
-def change_version(version, text):
-	version.text = text
-
-def save_changes(root):
-	etree.ElementTree(root).write(pom_path, pretty_print=True) #save changes
-
 if __name__ == '__main__':
-
-	git_repo = sys.argv[1]
-	pom_path = git_repo + "/pom.xml"
 
 	###### Logging Setup #########
 	logging.basicConfig(filename="log", 
@@ -56,32 +46,35 @@ if __name__ == '__main__':
 	logger=logging.getLogger() 
 	logger.setLevel(logging.INFO) 
 
-
-
-	######## Get XML File ######
-	if not path.exists(pom_path):
-		print pom_path
-		quit(2)
-
-	with open(pom_path, 'r') as xml_file:
-	    myxml = xml_file.read()
-
-	######## Verify Syntax ######
 	try:
-		document = etree.parse(BytesIO(myxml))
+		git_repo = sys.argv[1]
+		pom_path = git_repo + "/pom.xml"
+	
+		#Get XML File 
+		with open(pom_path, 'r') as xml_file:
+		    pom_xml = xml_file.read()
+	except IndexError:
+		logger.error("Must provide git-repo path as an argument")	    
+	except IOError as err:
+		logger.error("IO error !")
+		logger.error(err)
+		quit(1)
+	except Exception as err:
+		logger.error(err)
+		quit(1)
+
+	try:
+		######## Verify Syntax ######
+		document = etree.parse(BytesIO(pom_xml))
 	except etree.XMLSyntaxError as err:
 	    logger.error(err.error_log)
 	    quit(1)
 	except Exception as err:
 		logger.error(err)
 		quit(1)
-
-	# get root of XML
-	root = document.getroot()
-
-	# get <version>
-	version = root.find("version", root.nsmap)
-
+	
+	root = document.getroot() # get root of XML
+	version = root.find("version", root.nsmap) # get <version>
 	snapshot_path = get_snapshot_path(root, version.text, git_repo)
 
 	# check if SNAPHSHOT exists
@@ -94,9 +87,8 @@ if __name__ == '__main__':
 	org_name = repo.remotes["origin"].url.split("/")[-2]
 	branch_name = repo.head.shorthand
 
-
 	logger.info("Current version: " + version.text)
 	text = 'ci_' + org_name + "_" + branch_name + "-SNAPSHOT"
-	change_version(version, text)
+	version.text = text # modify version
 	logger.info("New version: " + version.text) #Add ci_foo_bar_branch-SNAPHOST
-	save_changes(root, pom_path)
+	etree.ElementTree(root).write(pom_path, pretty_print=True) #save changes
